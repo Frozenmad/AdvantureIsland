@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include "CommonStructure.h"
 
 using namespace std;
 
@@ -26,11 +27,16 @@ private:
 	float HealthPoint;
 	EHealthState HealthState;
 	EHungryState HungryState;
-	vector<int> PlayerPosition;
 	float StarveTime;
+	Position PlayerPosition;
+	int MapHeight;
+	int MapWidth;
 
 public:
-	Player(float hp, EHealthState heath, EHungryState hungry, vector<int> InitPosition);
+	Player(float hp, EHealthState heath, EHungryState hungry, Position InitPosition, int h = 100, int w = 100);
 	void Tick(float DeltaSecond);
 	void PlayerDie();
+	void SetPlayerPosition(int x, int y);
+	void SetPlayerPosition(Position pos);
+	Position GetPlayerPosition();
 };

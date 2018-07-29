@@ -24,6 +24,9 @@
     <ClInclude Include="GlobalParameter.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CommonStructure.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="land.cpp">
@@ -36,6 +39,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="GlobalParameter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonStructure.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

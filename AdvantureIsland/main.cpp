@@ -5,14 +5,23 @@
 #include "player.h"
 #include <conio.h>
 #include <string>
+#include <thread>
 
 vector<vector<Land>> Map;
 
-vector<int> InitPos;
+Player * MyPlayer;
 
 int height, width;
 
-string getShowWindow(int SideHeight, int SideWidth, vector<vector<Land>> &map, vector<int> &WindowPos, int height, int width)
+bool bGameEnd;
+
+void EndPlay();
+
+void _inner_Tick();
+
+void _thread_Tick(float DeltaSecond, u_int fps);
+
+string getShowWindow(int SideHeight, int SideWidth, int height, int width)
 {
 	string Show = "";
 
@@ -20,7 +29,7 @@ string getShowWindow(int SideHeight, int SideWidth, vector<vector<Land>> &map, v
 	{
 		for (int j = -SideWidth; j <= SideWidth; j++)
 		{
-			int x = WindowPos[0] + i, y = WindowPos[1] + j;
+			int x = MyPlayer->GetPlayerPosition().X + i, y = MyPlayer->GetPlayerPosition().Y + j;
 			if (x < 0 || y < 0 || x >= height || y >= width)
 			{
 				Show += "~";
@@ -31,7 +40,7 @@ string getShowWindow(int SideHeight, int SideWidth, vector<vector<Land>> &map, v
 			}
 			else
 			{
-				Show += map[x][y].getChar();
+				Show += Map[x][y].getChar();
 			}
 			Show += ' ';
 		}
@@ -39,6 +48,72 @@ string getShowWindow(int SideHeight, int SideWidth, vector<vector<Land>> &map, v
 	}
 
 	return Show;
+}
+
+void HandleMapInput(vector<vector<Land>> &map, Player * MyPlayer, Position DiffPos)
+{
+	Position CurPosition = MyPlayer->GetPlayerPosition();
+	Position TargetPosition = CurPosition + DiffPos;
+
+	TargetPosition.X < 0 ? TargetPosition.X = 0 : TargetPosition.X >= height ? TargetPosition.X = height - 1 : TargetPosition.X = TargetPosition.X;
+	TargetPosition.Y < 0 ? TargetPosition.Y = 0 : TargetPosition.Y >= width ? TargetPosition.Y = width - 1 : TargetPosition.Y = TargetPosition.Y;
+	
+	Land targetLand = map[TargetPosition.X][TargetPosition.Y];
+
+	if (targetLand.CanStepOn())
+	{
+		MyPlayer->SetPlayerPosition(TargetPosition);
+	}
+}
+
+// 在此处添加键盘的响应
+void _thread_handle_input(u_int fps = 20)
+{
+	while (!bGameEnd)
+	{
+		if (_kbhit())
+		{
+			char h = _getch();
+			switch (h)
+			{
+				case 'w':
+					HandleMapInput(Map, MyPlayer, Position(-1, 0));
+					break;
+				case 's':
+					HandleMapInput(Map, MyPlayer, Position(1, 0));
+					break;
+				case 'a':
+					HandleMapInput(Map, MyPlayer, Position(0, -1));
+					break;
+				case 'd':
+					HandleMapInput(Map, MyPlayer, Position(0, 1));
+					break;
+				case 'q':
+					bGameEnd = true;
+					break;
+				default:
+					break;
+			}
+		}
+		if (fps != 0) { Sleep(1000.0 / fps); }
+	}
+}
+
+// map刷新函数
+void _thread_refresh_map(u_int fps = 20)
+{
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD Pos;
+	Pos.X = Pos.Y = 0;
+
+	while (!bGameEnd)
+	{
+		SetConsoleCursorPosition(hOut, Pos);
+		cout << getShowWindow(5, 5, height, width);
+		if (fps != 0) {
+			Sleep(1000.0 / fps);
+		}
+	}
 }
 
 void LoadMap()
@@ -76,20 +151,10 @@ void LoadMap()
 		}
 		Map.push_back(Tmp);
 	}
-
-	int pos;
-	cin >> pos;
-	InitPos.push_back(pos);
-	cin >> pos;
-	InitPos.push_back(pos);
-
-	cout << "done!" << endl;
-
-	cout << "Press anykey to continue";
-
-	_getch();
+	cout << "done!\n";
 }
 
+// 游戏初始化的一些代码，在游戏开始前执行
 void BeginPlay()
 {
 	//设置光标为不可见
@@ -104,81 +169,74 @@ void BeginPlay()
 
 	//加载地图
 	LoadMap();
+
+	Position tmp;
+
+	cin >> tmp.X >> tmp.Y;
+
+	//初始化Player
+	MyPlayer = new Player(100.0, EHealthState::Healthy, EHungryState::HungryAuto, tmp, height, width);
+
+	bGameEnd = false;
+
+	cout << "Press any key to continue!";
+
+	_getch();
+
+	system("cls");
+
+	// Show the map
+	thread MapThread(_thread_refresh_map, 30);
+	thread InputThread(_thread_handle_input, 0);
+	thread TickThread(_thread_Tick, 0.1, 10);
+
+	MapThread.detach();
+	InputThread.detach();
+	TickThread.detach();
+
+	while (!bGameEnd)
+	{
+		Sleep(1000);
+	}
 }
 
+// 游戏结束后的代码，在游戏退出时执行
 void EndPlay()
 {
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	//设置光标为可见
+	// 设置光标为可见
 	CONSOLE_CURSOR_INFO CursorInfo;
 	GetConsoleCursorInfo(hOut, &CursorInfo);
 	CursorInfo.bVisible = true;
 	SetConsoleCursorInfo(hOut, &CursorInfo);
+	delete MyPlayer;
+}
+
+void _thread_Tick(float DeltaSecond, u_int fps = 20)
+{
+	while (!bGameEnd)
+	{
+		// 设置执行周期
+		thread t(_inner_Tick);
+		t.detach();
+		if(fps != 0)
+		{
+			Sleep(1000.0 / fps);
+		}
+	}
+}
+
+void _inner_Tick()
+{
+
 }
 
 int main()
 {
 	BeginPlay();
 
-	Player MyPlayer(100.0, EHealthState::Healthy, EHungryState::HungryAuto, InitPos);
-
-	vector<int> WindowPos(InitPos.begin(), InitPos.end());
-
-	int WindowSideHeight = 5, WindowSideWidth = 5;
-
-	char inst;
-
-	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD Position;
-	Position.X = Position.Y = 0;
-
-	//设置光标为不可见
-	CONSOLE_CURSOR_INFO CursorInfo;
-	GetConsoleCursorInfo(hOut, &CursorInfo);
-	CursorInfo.bVisible = false;
-	SetConsoleCursorInfo(hOut, &CursorInfo);
-
-	while (true)
-	{
-		SetConsoleCursorPosition(hOut, Position);
-		cout << getShowWindow(WindowSideHeight, WindowSideWidth, Map, WindowPos, height, width);
-		if (_kbhit())
-		{
-			inst = _getch();
-			if (inst == 'q')
-			{
-				break;
-			}
-			else
-			{
-				switch (inst)
-				{
-				case 'w':
-					WindowPos[0] -= 1;
-					if (WindowPos[0] < 0) WindowPos[0] = 0;
-					break;
-				case 's':
-					WindowPos[0] += 1;
-					if (WindowPos[0] >= height) WindowPos[0] = height - 1;
-					break;
-				case 'a':
-					WindowPos[1] -= 1;
-					if (WindowPos[1] < 0) WindowPos[1] = 0;
-					break;
-				case 'd':
-					WindowPos[1] += 1;
-					if (WindowPos[1] >= width) WindowPos[1] = width - 1;
-					break;
-				default:
-					break;
-				}
-			}
-		}
-	}
-
-
-
+	EndPlay();
 	return 0;
 
 }

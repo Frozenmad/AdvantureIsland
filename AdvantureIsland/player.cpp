@@ -2,12 +2,14 @@
 #include "GlobalParameter.h"
 #include <iostream>
 
-Player::Player(float hp, EHealthState health, EHungryState hungry, vector<int> InitPosition)
+Player::Player(float hp, EHealthState health, EHungryState hungry, Position InitPosition, int h, int w)
 {
 	HealthPoint = hp;
 	HealthState = health;
 	HungryState = hungry;
 	PlayerPosition = InitPosition;
+	MapHeight = h;
+	MapWidth = w;
 }
 
 void Player::Tick(float DeltaSecond)
@@ -47,3 +49,20 @@ void Player::PlayerDie()
 {
 	cout << "You have died!";
 }
+
+void Player::SetPlayerPosition(int x, int y)
+{
+	x < 0 ? PlayerPosition.X = 0 : (x >= MapHeight ? PlayerPosition.X = MapHeight - 1 : PlayerPosition.X = x);
+	y < 0 ? PlayerPosition.Y = 0 : (y >= MapWidth ? PlayerPosition.Y = MapHeight - 1 : PlayerPosition.Y = y);
+}
+
+void Player::SetPlayerPosition(Position pos)
+{
+	SetPlayerPosition(pos.X, pos.Y);
+}
+
+Position Player::GetPlayerPosition()
+{
+	return PlayerPosition;
+}
+
