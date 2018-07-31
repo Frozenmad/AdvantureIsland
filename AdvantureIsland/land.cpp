@@ -1,4 +1,6 @@
 #include "land.h"
+#include "player.h"
+#include "PickupBase.h"
 
 void Land::InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spawn, char sc)
 {
@@ -7,6 +9,7 @@ void Land::InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spa
 	bCanFarming = farm;
 	bCanSpawnThing = spawn;
 	showChar = sc;
+	Pickup = NULL;
 }
 
 Land::Land(ELandType lt)
@@ -21,13 +24,13 @@ Land::Land(ELandType lt)
 		InnerHelper_SetParameter(lt, true, true, true, '.');
 		break;
 	case Destroyed:
-		InnerHelper_SetParameter(lt, true, false, false, 'O');
+		InnerHelper_SetParameter(lt, true, false, false, '`');
 		break;
 	case Cliff:
 		InnerHelper_SetParameter(lt, false, false, false, 'X');
 		break;
 	case Water:
-		InnerHelper_SetParameter(lt, false, false, true, '~');
+		InnerHelper_SetParameter(lt, true, false, true, '~');
 		break;
 	case Default:
 		InnerHelper_SetParameter(Cliff, false, false, false, 'X');
@@ -55,13 +58,13 @@ void Land::ChangeType(ELandType lt)
 		InnerHelper_SetParameter(lt, true, true, true, '.');
 		break;
 	case Destroyed:
-		InnerHelper_SetParameter(lt, true, false, false,'O');
+		InnerHelper_SetParameter(lt, true, false, false,'`');
 		break;
 	case Cliff:
 		InnerHelper_SetParameter(lt, false, false, false,'X');
 		break;
 	case Water:
-		InnerHelper_SetParameter(lt, false, false, true,'~');
+		InnerHelper_SetParameter(lt, true, false, true,'~');
 		break;
 	case Default:
 		InnerHelper_SetParameter(Cliff, false, false, false, 'X');
@@ -70,4 +73,51 @@ void Land::ChangeType(ELandType lt)
 		InnerHelper_SetParameter(Cliff, false, false, false, 'X');
 		break;
 	}
+}
+
+char Land::getChar()
+{
+	if (HavePickup())
+	{
+		return Pickup->getPickupChar();
+	}
+
+	return showChar;
+}
+
+void Land::onStepOnLand(Player * player)
+{
+	if (HavePickup())
+	{
+		Pickup->onCollect(player);
+		Pickup = NULL;
+	}
+	switch (LandType)
+	{
+	case Idle:
+		break;
+	case Farm:
+		break;
+	case Destroyed:
+		break;
+	case Cliff:
+		break;
+	case Water:
+		player->SetPlayerState(EPlayerState::Die);
+		break;
+	case Default:
+		break;
+	default:
+		break;
+	}
+}
+
+void Land::AddPickup(PickupBase * InPickup)
+{
+	Pickup = InPickup;
+}
+
+bool Land::HavePickup()
+{
+	return (Pickup != NULL);
 }

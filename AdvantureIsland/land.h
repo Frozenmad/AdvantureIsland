@@ -23,6 +23,7 @@ private:
 	bool bCanSpawnThing;
 	char showChar;
 	void InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spawn, char sc);
+	class PickupBase * Pickup;
 
 public:
 	Land(ELandType lt);
@@ -31,5 +32,8 @@ public:
 	bool CanStepOn() { return bCanStepOn; }
 	bool CanFarming() { return bCanFarming; }
 	bool CanSpawnThing() { return bCanSpawnThing; }
-	char getChar() { return showChar; }
+	char getChar();
+	void onStepOnLand(class Player * player);
+	void AddPickup(PickupBase * InPickup);
+	bool HavePickup();
 };

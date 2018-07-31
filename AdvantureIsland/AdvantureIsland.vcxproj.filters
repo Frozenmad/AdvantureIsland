@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\Pickup">
+      <UniqueIdentifier>{a1029ddb-deb0-4311-9261-d27a72c8a455}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="land.h">
@@ -26,6 +29,18 @@
     </ClInclude>
     <ClInclude Include="CommonStructure.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PickupBase.h">
+      <Filter>头文件\Pickup</Filter>
+    </ClInclude>
+    <ClInclude Include="Tree.h">
+      <Filter>头文件\Pickup</Filter>
+    </ClInclude>
+    <ClInclude Include="Stone.h">
+      <Filter>头文件\Pickup</Filter>
+    </ClInclude>
+    <ClInclude Include="Seed.h">
+      <Filter>头文件\Pickup</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -42,6 +57,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CommonStructure.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PickupBase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Tree.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Stone.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Seed.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

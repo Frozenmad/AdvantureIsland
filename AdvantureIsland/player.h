@@ -21,6 +21,31 @@ enum EHungryState
 	Starve
 };
 
+enum EPlayerState
+{
+	Live,
+	Die
+};
+
+struct SPlayerInventory
+{
+	int Wood;
+	int Stone;
+	int Seed;
+	int Meat;
+	int Vegetable;
+	int Trap;
+	int Medicine;
+	int Wall;
+	int Bed;
+	int Chair;
+	int FireTower;
+	int Cook;
+	SPlayerInventory();
+	SPlayerInventory(int w, int st, int se, int mea, int ve, int t, int me, int wa, int be, int ch, int fi, int co) :
+		Wood(w), Stone(st), Seed(se), Meat(mea), Vegetable(ve), Trap(t), Medicine(me), Wall(wa), Bed(be), Chair(ch), FireTower(fi), Cook(co) {}
+};
+
 class Player
 {
 private:
@@ -31,12 +56,16 @@ private:
 	Position PlayerPosition;
 	int MapHeight;
 	int MapWidth;
+	EPlayerState PlayerState;
 
 public:
-	Player(float hp, EHealthState heath, EHungryState hungry, Position InitPosition, int h = 100, int w = 100);
+	SPlayerInventory PlayerInventory;
+	Player(float hp, EHealthState heath, EHungryState hungry, Position InitPosition, int h = 100, int w = 100, EPlayerState ps = Live);
 	void Tick(float DeltaSecond);
 	void PlayerDie();
 	void SetPlayerPosition(int x, int y);
 	void SetPlayerPosition(Position pos);
 	Position GetPlayerPosition();
+	EPlayerState GetPlayerState() { return PlayerState; }
+	EPlayerState SetPlayerState(EPlayerState TargetState) { PlayerState = TargetState; return TargetState; }
 };

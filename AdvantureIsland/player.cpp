@@ -2,7 +2,7 @@
 #include "GlobalParameter.h"
 #include <iostream>
 
-Player::Player(float hp, EHealthState health, EHungryState hungry, Position InitPosition, int h, int w)
+Player::Player(float hp, EHealthState health, EHungryState hungry, Position InitPosition, int h, int w, EPlayerState ps)
 {
 	HealthPoint = hp;
 	HealthState = health;
@@ -10,6 +10,7 @@ Player::Player(float hp, EHealthState health, EHungryState hungry, Position Init
 	PlayerPosition = InitPosition;
 	MapHeight = h;
 	MapWidth = w;
+	PlayerState = ps;
 }
 
 void Player::Tick(float DeltaSecond)
@@ -66,3 +67,7 @@ Position Player::GetPlayerPosition()
 	return PlayerPosition;
 }
 
+SPlayerInventory::SPlayerInventory()
+{
+	Wood = Stone = Seed = Meat = Vegetable = Trap = Medicine = Wall = Bed = Chair = FireTower = Cook = 0;
+}
