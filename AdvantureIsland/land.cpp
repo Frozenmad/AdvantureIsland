@@ -1,6 +1,7 @@
 #include "land.h"
 #include "player.h"
 #include "PickupBase.h"
+#include <Windows.h>
 
 void Land::InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spawn, char sc)
 {
@@ -120,4 +121,31 @@ void Land::AddPickup(PickupBase * InPickup)
 bool Land::HavePickup()
 {
 	return (Pickup != NULL);
+}
+
+int Land::getColor()
+{
+	switch (LandType)
+	{
+	case Idle:
+		return BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY;
+		break;
+	case Farm:
+		return BACKGROUND_GREEN | BACKGROUND_INTENSITY;
+		break;
+	case Destroyed:
+		return BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
+		break;
+	case Cliff:
+		return 0;
+		break;
+	case Water:
+		return BACKGROUND_BLUE | BACKGROUND_INTENSITY;
+		break;
+	case Default:
+		break;
+	default:
+		break;
+	}
+	return 0;
 }

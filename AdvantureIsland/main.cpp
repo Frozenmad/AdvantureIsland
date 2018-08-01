@@ -47,6 +47,61 @@ string StringfyTime(long long InTime)
 	return result;
 }
 
+void SickPlayer(Player * plr)
+{
+	float rate = rand() / (RAND_MAX + 1);
+	switch (GlobalParameter::GlobalWeather)
+	{
+	case EWeather::Sunny:
+		if (rate < 0.1) { plr->PlayerSick(); }
+		break;
+	case EWeather::Windy:
+		if (rate < 0.3) { plr->PlayerSick(); }
+		break;
+	case EWeather::Rainy:
+		if (rate < 0.5) { plr->PlayerSick(); }
+		break;
+	default:
+		break;
+	}
+}
+
+void PrintMap(int initX, int initY, int height, int width, int SideHeight = 5, int SideWidth = 5)
+{
+	for (int i = -SideHeight; i <= SideHeight; i++)
+	{
+		for (int j = -SideWidth; j <= SideWidth; j++)
+		{
+			int x = MyPlayer->GetPlayerPosition().X + i, y = MyPlayer->GetPlayerPosition().Y + j;
+			if (x < 0 || y < 0 || x >= height || y >= width)
+			{
+				SetConsoleTextAttribute(hOut, 0);
+				cout << "  ";
+			}
+			else if (i == 0 && j == 0)
+			{
+				SetConsoleTextAttribute(hOut, Map[x][y].getColor());
+				cout << "<>";
+			}
+			else
+			{
+				if (Map[x][y].HavePickup())
+				{
+					SetConsoleTextAttribute(hOut, Map[x][y].getColor());
+					cout << Map[x][y].getChar() << " ";
+				}
+				else
+				{
+					SetConsoleTextAttribute(hOut, Map[x][y].getColor());
+					cout << "  ";
+				}
+			}
+		}
+		cout << endl;
+	}
+	SetConsoleTextAttribute(hOut, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+}
+
 string getShowWindow(int SideHeight, int SideWidth, int height, int width)
 {
 	string Show = "";
@@ -72,21 +127,6 @@ string getShowWindow(int SideHeight, int SideWidth, int height, int width)
 		}
 		Show += '\n';
 	}
-
-	// 加上玩家状态的输出
-	switch (MyPlayer->GetPlayerState())
-	{
-	case EPlayerState::Live:
-		Show += "Player State : Live\t\n";
-		break;
-	case EPlayerState::Die:
-		Show += "Player State : Die\t\n";
-		break;
-	default:
-		Show += "Player State : Unknown\t\n";
-		break;
-	}
-
 	return Show;
 }
 
@@ -98,11 +138,11 @@ void HandleMapInput(vector<vector<Land>> &map, Player * MyPlayer, Position DiffP
 	TargetPosition.X < 0 ? TargetPosition.X = 0 : TargetPosition.X >= height ? TargetPosition.X = height - 1 : TargetPosition.X = TargetPosition.X;
 	TargetPosition.Y < 0 ? TargetPosition.Y = 0 : TargetPosition.Y >= width ? TargetPosition.Y = width - 1 : TargetPosition.Y = TargetPosition.Y;
 	
-	Land targetLand = map[TargetPosition.X][TargetPosition.Y];
+	Land * targetLand = &map[TargetPosition.X][TargetPosition.Y];
 
-	if (targetLand.CanStepOn())
+	if (targetLand->CanStepOn())
 	{
-		targetLand.onStepOnLand(MyPlayer);
+		targetLand->onStepOnLand(MyPlayer);
 		MyPlayer->SetPlayerPosition(TargetPosition);
 	}
 }
@@ -163,6 +203,54 @@ void ShowPlayerInformation(int initX, int initY)
 	PrintInformation(initX, initY + 10, "Chair    :" + to_string(MyPlayer->PlayerInventory.Chair));
 	PrintInformation(initX, initY + 11, "FireTower:" + to_string(MyPlayer->PlayerInventory.FireTower));
 	PrintInformation(initX, initY + 12, "Cook     :" + to_string(MyPlayer->PlayerInventory.Cook));
+	string info = "Player State : ";
+	switch (MyPlayer->GetPlayerState())
+	{
+	case EPlayerState::Live:
+		info += "Live";
+		break;
+	case EPlayerState::Die:
+		info += "Die ";
+		break;
+	default:
+		break;
+	}
+	PrintInformation(initX, initY + 13, info);
+	info = "Player Healthy State : ";
+	switch (MyPlayer->GetPlayerHealthState())
+	{
+	case EHealthState::Healthy:
+		info += "Healthy";
+		break;
+	case EHealthState::Auto:
+		info += "Auto   ";
+		break;
+	case EHealthState::Sick:
+		info += "Sick   ";
+		break;
+	default:
+		break;
+	}
+	PrintInformation(initX, initY + 14, info);
+	info = "Player Hungry State : ";
+	switch (MyPlayer->GetPlayerHungryState())
+	{
+	case EHungryState::Full:
+		info += "Full";
+		break;
+	case EHungryState::HungryAuto:
+		info += "Auto";
+		break;
+	case EHungryState::Hungry:
+		info += "Hungry";
+		break;
+	case EHungryState::Starve:
+		info += "Starve";
+		break;
+	default:
+		break;
+	}
+	PrintInformation(initX, initY + 15, info);
 }
 
 // map刷新函数
@@ -171,14 +259,40 @@ void _thread_refresh_map(u_int fps = 20)
 	COORD Pos;
 	Pos.X = Pos.Y = 0;
 
+	static int time = 0;
+
 	while (!bGameEnd)
 	{
 		// First output basic info
-		Pos.X = Pos.Y = 0;
+		if (time == 0)
+		{
+			Pos.X = Pos.Y = 0;
+			SetConsoleCursorPosition(hOut, Pos);
+			cout << StringfyTime(GlobalTime);
+		}
+		Pos.X = 0; Pos.Y = 1;
 		SetConsoleCursorPosition(hOut, Pos);
-		cout << StringfyTime(GlobalTime) <<getShowWindow(5, 5, height, width);
+		PrintMap(0, 1, height, width);
+		time = (time + 1) % (fps / 2);
 		// Then output player info
 		ShowPlayerInformation(25, 1);
+		// Print weather information
+		string winfo = "Weather : ";
+		switch (GlobalParameter::GlobalWeather)
+		{
+		case EWeather::Sunny:
+			winfo += "Sunny";
+			break;
+		case EWeather::Windy:
+			winfo += "Windy";
+			break;
+		case EWeather::Rainy:
+			winfo += "Rainy";
+			break;
+		default:
+			break;
+		}
+		PrintInformation(25, 0, winfo);
 		if (fps != 0) {
 			Sleep(1000.0 / fps);
 		}
@@ -308,17 +422,17 @@ void BeginPlay()
 	// Show the map
 	thread MapThread(_thread_refresh_map, 30);
 	thread InputThread(_thread_handle_input, 0);
-	thread TickThread(_thread_Tick, 0.1, 10);
-
-	MapThread.detach();
-	InputThread.detach();
-	TickThread.detach();
+	thread TickThread(_thread_Tick, 6, 10);
 
 	while (!bGameEnd)
 	{
 		bGameEnd = bGameEnd || MyPlayer->GetPlayerState() == EPlayerState::Die;
 		Sleep(50);
 	}
+
+	MapThread.join();
+	InputThread.join();
+	TickThread.join();
 }
 
 // 游戏结束后的代码，在游戏退出时执行
@@ -360,8 +474,19 @@ void _thread_Tick(float DeltaSecond, u_int fps = 20)
 
 void _inner_Tick(float DeltaSecond, u_int fps)
 {
+	static int Day = 0;
 	GlobalTime = GlobalTime + DeltaSecond;
 	if (GlobalTime > 15 * 3600 * 24) GlobalTime = 0;
+
+	if (GlobalTime > Day * 3600 * 24)
+	{
+		Day++;
+		GlobalParameter::ChangeWeather();
+		SickPlayer(MyPlayer);
+	}
+
+	MyPlayer->Tick(DeltaSecond);
+
 	for (PickupBase * pointer : PickupList)
 	{
 		if (pointer->WhetherTick())
@@ -369,6 +494,29 @@ void _inner_Tick(float DeltaSecond, u_int fps)
 			pointer->Tick(DeltaSecond);
 		}
 	}
+}
+
+int test()
+{
+	vector<vector<Land>> testMap;
+	vector<Land> tmp;
+	tmp.push_back(Land(ELandType::Farm));
+	tmp.push_back(Land(ELandType::Farm));
+	testMap.push_back(tmp);
+	testMap.push_back(tmp);
+	Tree testTree1,testTree2;
+	Player testPlayer(100, EHealthState::Healthy, EHungryState::Full, Position(0,0), 2, 2, EPlayerState::Live);
+	testMap[0][0].AddPickup(&testTree1);
+	testMap[1][1].AddPickup(&testTree2);
+	cout << "Now the 0 0 : " << testMap[0][0].HavePickup() << endl;
+	cout << "Now the 1 1 : " << testMap[1][1].HavePickup() << endl;
+	testMap[0][0].onStepOnLand(&testPlayer);
+	testMap[1][1].onStepOnLand(&testPlayer);
+	cout << "After Step on" << endl;
+	cout << "Now the 0 0 : " << testMap[0][0].HavePickup() << endl;
+	cout << "Now the 1 1 : " << testMap[1][1].HavePickup() << endl;
+	_getch();
+	return 0;
 }
 
 int main()

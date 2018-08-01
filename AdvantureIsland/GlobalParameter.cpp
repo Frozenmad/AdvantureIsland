@@ -1,5 +1,26 @@
 #include "GlobalParameter.h"
+#include <cstdlib>
 
 float GlobalParameter::HungryRefreshRate = 3600 * 4;
 float GlobalParameter::HungryStateTurningRate = 3600 * 8;
 float GlobalParameter::SickHPDecreaseRate = 5;
+float GlobalParameter::MaxHealthPoint = 100.0;
+float GlobalParameter::HealthyHPIncreaseRate = 5;
+EWeather GlobalParameter::GlobalWeather = EWeather::Sunny;
+
+void GlobalParameter::ChangeWeather()
+{
+	float rate = rand() / (RAND_MAX + 1);
+	if (rate < 0.5)
+	{
+		GlobalWeather = EWeather::Sunny;
+	}
+	else if (rate < 0.8)
+	{
+		GlobalWeather = EWeather::Windy;
+	}
+	else
+	{
+		GlobalWeather = EWeather::Rainy;
+	}
+}

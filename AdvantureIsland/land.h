@@ -36,4 +36,5 @@ public:
 	void onStepOnLand(class Player * player);
 	void AddPickup(PickupBase * InPickup);
 	bool HavePickup();
+	int getColor();
 };

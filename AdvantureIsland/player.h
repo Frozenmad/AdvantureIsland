@@ -41,6 +41,7 @@ struct SPlayerInventory
 	int Chair;
 	int FireTower;
 	int Cook;
+	int Food;
 	SPlayerInventory();
 	SPlayerInventory(int w, int st, int se, int mea, int ve, int t, int me, int wa, int be, int ch, int fi, int co) :
 		Wood(w), Stone(st), Seed(se), Meat(mea), Vegetable(ve), Trap(t), Medicine(me), Wall(wa), Bed(be), Chair(ch), FireTower(fi), Cook(co) {}
@@ -65,7 +66,14 @@ public:
 	void PlayerDie();
 	void SetPlayerPosition(int x, int y);
 	void SetPlayerPosition(Position pos);
+	void TakeFood();
+	void TakePill();
+	bool CanTakeFood();
+	bool CanTakePill();
+	void PlayerSick();
 	Position GetPlayerPosition();
 	EPlayerState GetPlayerState() { return PlayerState; }
 	EPlayerState SetPlayerState(EPlayerState TargetState) { PlayerState = TargetState; return TargetState; }
+	EHealthState GetPlayerHealthState() { return HealthState; }
+	EHungryState GetPlayerHungryState() { return HungryState; }
 };
