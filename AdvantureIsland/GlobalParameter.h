@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdlib>
+#include <mutex>
+#include "Placer.h"
 
 using namespace std;
 
@@ -20,5 +22,8 @@ public:
 	static float MaxHealthPoint;
 	static float HealthyHPIncreaseRate;
 	static EWeather GlobalWeather;
+	static mutex OutputMutex;
 	static void ChangeWeather();
-};
+	static void OutputLock();
+	static void OutputUnLock();
+} GlobalParam;

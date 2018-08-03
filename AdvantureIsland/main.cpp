@@ -4,12 +4,19 @@
 #include <string>
 #include <thread>
 #include <fstream>
+#include <mutex>
 #include "GlobalParameter.h"
 #include "land.h"
 #include "player.h"
 #include "Seed.h"
 #include "Stone.h"
 #include "Tree.h"
+#include "Constructer.h"
+#include "Cooker.h"
+#include "Gardener.h"
+#include "Placer.h"
+
+using namespace std;
 
 // 一些全局变量
 ifstream inFile;
@@ -19,7 +26,24 @@ int height, width;
 bool bGameEnd;
 int iTree, iStone, iSeed, iAnimal;
 vector<PickupBase*> PickupList;
+
+mutex GameThreadMutex;
+Placer MyPlacer;
 HANDLE hOut;
+
+/*
+GamePlayState ---- the state of game play stay in.
+0 --- Origin
+1 --- Open Menu
+2 --- Main Play State
+3 --- End State
+*/
+int GamePlayState;
+
+bool validMapId(int x, int y)
+{
+	return x >= 0 || y >= 0 || x < height || y < width;
+}
 
 void EndPlay();
 
@@ -29,12 +53,28 @@ void _inner_Tick(float DeltaSecond, u_int fps = 20);
 
 void _thread_Tick(float DeltaSecond, u_int fps);
 
+void BeginPlay();
+
+void EndPlay();
+
+void PrintInformation(int x, int y, string info);
+
+void Pause()
+{
+	GameThreadMutex.lock();
+}
+
+void Continue()
+{
+	GameThreadMutex.unlock();
+}
+
 string StringfyTime(long long InTime)
 {
-	int Day = InTime / (24 * 3600);
-	int Hour = (InTime / 3600) % 24;
-	int Min = (InTime / 60) % 60;
-	int Second = InTime % 60;
+	int Day = (int)(InTime / (24 * 3600));
+	int Hour = (int)((InTime / 3600) % 24);
+	int Min = (int)((InTime / 60) % 60);
+	int Second = (int)(InTime % 60);
 
 	char s[20];
 
@@ -49,7 +89,7 @@ string StringfyTime(long long InTime)
 
 void SickPlayer(Player * plr)
 {
-	float rate = rand() / (RAND_MAX + 1);
+	double rate = rand() / (RAND_MAX + 1.0);
 	switch (GlobalParameter::GlobalWeather)
 	{
 	case EWeather::Sunny:
@@ -85,7 +125,7 @@ void PrintMap(int initX, int initY, int height, int width, int SideHeight = 5, i
 			}
 			else
 			{
-				if (Map[x][y].HavePickup())
+				if (Map[x][y].HavePickup() || Map[x][y].HaveInteractive())
 				{
 					SetConsoleTextAttribute(hOut, Map[x][y].getColor());
 					cout << Map[x][y].getChar() << " ";
@@ -155,6 +195,7 @@ void _thread_handle_input(u_int fps = 20)
 		if (_kbhit())
 		{
 			char h = _getch();
+			SPlayerInventory * Inv = &(MyPlayer->PlayerInventory);
 			switch (h)
 			{
 				case 'w':
@@ -172,11 +213,110 @@ void _thread_handle_input(u_int fps = 20)
 				case 'q':
 					bGameEnd = true;
 					break;
+				case 'm':
+				{
+					int x, y;
+					x = MyPlayer->GetPlayerPosition().X; y = MyPlayer->GetPlayerPosition().Y;
+					// check up:
+					if (validMapId(x - 1, y) || Map[x-1][y].HaveInteractive())
+					{
+						COORD Pos;
+						Pos.X = 0; Pos.Y = 13;
+						Pause();
+						Map[x - 1][y].getInteractiveBase()->ProcessQuery(MyPlayer,Pos);
+						Continue();
+					}
+					break;
+				}
+				case 'p':
+				{
+					COORD Pos;
+					Pos.X = 0; Pos.Y = 13;
+					Pause();
+					MyPlacer.Place(Map, MyPlayer, Pos);
+					Continue();
+					break;
+				}
+				/*
+				case '1':
+					if (Inv->Vegetable >= 3 && Inv->Wood >= 1)
+					{
+						Inv->Vegetable -= 3;
+						Inv->Wood -= 1;
+						Inv->Food += 1;
+					}
+					break;
+				case '2':
+					if (Inv->Vegetable >= 1 && Inv->Wood >= 1 && Inv->Meat >= 1)
+					{
+						Inv->Vegetable -= 1;
+						Inv->Wood -= 1;
+						Inv->Meat -= 1;
+						Inv->Food += 1;
+					}
+					break;
+				case '3':
+					if (Inv->Meat >= 2 && Inv->Wood >= 1)
+					{
+						Inv->Meat -= 2;
+						Inv->Wood -= 1;
+						Inv->Food += 1;
+					}
+					break;
+				case '4':
+					if (Inv->Wood >= 10)
+					{
+						Inv->Wood -= 10;
+						Inv->Bed += 1;
+					}
+					break;
+				case '5':
+					if (Inv->Wood >= 4)
+					{
+						Inv->Wood -= 4;
+						Inv->Chair += 1;
+					}
+					break;
+				case '6':
+					if (Inv->Stone >= 3)
+					{
+						Inv->Stone -= 3;
+						Inv->Wall += 1;
+					}
+					break;
+				case '7':
+					if (Inv->Stone >= 2)
+					{
+						Inv->Stone -= 2;
+						Inv->FireTower += 1;
+					}
+					break;
+				case '8':
+					if (Inv->Stone >= 4 && Inv->Wood >= 2)
+					{
+						Inv->Stone -= 4;
+						Inv->Wood -= 2;
+						Inv->Cook += 1;
+					}
+				case '9':
+					if (Inv->Vegetable >= 1)
+					{
+						Inv->Vegetable -= 1;
+						Inv->Medicine += 1;
+					}
+					break;
+				case '0':
+					if (Inv->Vegetable >= 1)
+					{
+						Inv->Vegetable -= 1;
+						Inv->Seed += 2;
+					}
+					break;*/
 				default:
 					break;
 			}
 		}
-		if (fps != 0) { Sleep(1000.0 / fps); }
+		if (fps != 0) { Sleep((DWORD)(1000.0 / fps)); }
 	}
 }
 
@@ -184,25 +324,44 @@ void PrintInformation(int x, int y, string info)
 {
 	COORD Pos;
 	Pos.X = x; Pos.Y = y;
+	GlobalParameter::OutputLock();
 	SetConsoleCursorPosition(hOut, Pos);
 	cout << info;
+	GlobalParameter::OutputUnLock();
+}
+
+void ShowInstruction(int initX, int initY)
+{
+	PrintInformation(initX, initY + 0, "+--------------------------------------+");
+	PrintInformation(initX, initY + 1, "| 1. 3 veg + 1 wood => 1 food          |");
+	PrintInformation(initX, initY + 2, "| 2. 1 meat + 1 veg + 1 wood => 1 food |");
+	PrintInformation(initX, initY + 3, "| 3. 2 meat + 1 wood => 1 food         |");
+	PrintInformation(initX, initY + 4, "| 4. 10 wood => 1 bed                  |");
+	PrintInformation(initX, initY + 5, "| 5. 4 wood => 1 chair                 |");
+	PrintInformation(initX, initY + 6, "| 6. 3 stone => 1 wall                 |");
+	PrintInformation(initX, initY + 7, "| 7. 2 stone => 1 FireTower            |");
+	PrintInformation(initX, initY + 8, "| 8. 4 stone + 2 wood => 1 cook        |");
+	PrintInformation(initX, initY + 9, "| 9. 1 veg => 1 medicine               |");
+	PrintInformation(initX, initY + 10, "| 0. 1 veg => 2 seed                   |");
+	PrintInformation(initX, initY + 11, "+--------------------------------------+");
 }
 
 void ShowPlayerInformation(int initX, int initY)
 {
 	PrintInformation(initX, initY + 0, "Player Info");
-	PrintInformation(initX, initY + 1, "Wood     :" + to_string(MyPlayer->PlayerInventory.Wood));
-	PrintInformation(initX, initY + 2, "Stone    :" + to_string(MyPlayer->PlayerInventory.Stone));
-	PrintInformation(initX, initY + 3, "Seed     :" + to_string(MyPlayer->PlayerInventory.Seed));
-	PrintInformation(initX, initY + 4, "Meat     :" + to_string(MyPlayer->PlayerInventory.Meat));
-	PrintInformation(initX, initY + 5, "Vegetable:" + to_string(MyPlayer->PlayerInventory.Vegetable));
-	PrintInformation(initX, initY + 6, "Trap     :" + to_string(MyPlayer->PlayerInventory.Trap));
-	PrintInformation(initX, initY + 7, "Medicine :" + to_string(MyPlayer->PlayerInventory.Medicine));
-	PrintInformation(initX, initY + 8, "Wall     :" + to_string(MyPlayer->PlayerInventory.Wall));
-	PrintInformation(initX, initY + 9, "Bed      :" + to_string(MyPlayer->PlayerInventory.Bed));
-	PrintInformation(initX, initY + 10, "Chair    :" + to_string(MyPlayer->PlayerInventory.Chair));
-	PrintInformation(initX, initY + 11, "FireTower:" + to_string(MyPlayer->PlayerInventory.FireTower));
-	PrintInformation(initX, initY + 12, "Cook     :" + to_string(MyPlayer->PlayerInventory.Cook));
+	char infos[40];
+	sprintf_s(infos, "Wood     :%2d Stone     :%2d", MyPlayer->PlayerInventory.Wood,MyPlayer->PlayerInventory.Stone);
+	PrintInformation(initX, initY + 1, string(infos));
+	sprintf_s(infos, "Seed     :%2d Meat      :%2d", MyPlayer->PlayerInventory.Seed, MyPlayer->PlayerInventory.Meat);
+	PrintInformation(initX, initY + 2, string(infos));
+	sprintf_s(infos, "Vegetable:%2d Trap      :%2d", MyPlayer->PlayerInventory.Vegetable, MyPlayer->PlayerInventory.Trap);
+	PrintInformation(initX, initY + 3, string(infos));
+	sprintf_s(infos, "Medicine :%2d Wall      :%2d", MyPlayer->PlayerInventory.Medicine, MyPlayer->PlayerInventory.Wall);
+	PrintInformation(initX, initY + 4, string(infos));
+	sprintf_s(infos, "Bed      :%2d Chair     :%2d", MyPlayer->PlayerInventory.Bed, MyPlayer->PlayerInventory.Chair);
+	PrintInformation(initX, initY + 5, string(infos));
+	sprintf_s(infos, "FireTower:%2d Cook      :%2d", MyPlayer->PlayerInventory.FireTower, MyPlayer->PlayerInventory.Cook);
+	PrintInformation(initX, initY + 6, string(infos));
 	string info = "Player State : ";
 	switch (MyPlayer->GetPlayerState())
 	{
@@ -215,7 +374,7 @@ void ShowPlayerInformation(int initX, int initY)
 	default:
 		break;
 	}
-	PrintInformation(initX, initY + 13, info);
+	PrintInformation(initX, initY + 7, info);
 	info = "Player Healthy State : ";
 	switch (MyPlayer->GetPlayerHealthState())
 	{
@@ -231,7 +390,7 @@ void ShowPlayerInformation(int initX, int initY)
 	default:
 		break;
 	}
-	PrintInformation(initX, initY + 14, info);
+	PrintInformation(initX, initY + 8, info);
 	info = "Player Hungry State : ";
 	switch (MyPlayer->GetPlayerHungryState())
 	{
@@ -250,7 +409,7 @@ void ShowPlayerInformation(int initX, int initY)
 	default:
 		break;
 	}
-	PrintInformation(initX, initY + 15, info);
+	PrintInformation(initX, initY + 9, info);
 }
 
 // map刷新函数
@@ -263,16 +422,21 @@ void _thread_refresh_map(u_int fps = 20)
 
 	while (!bGameEnd)
 	{
+		
 		// First output basic info
 		if (time == 0)
 		{
 			Pos.X = Pos.Y = 0;
+			GlobalParameter::OutputLock();
 			SetConsoleCursorPosition(hOut, Pos);
-			cout << StringfyTime(GlobalTime);
+			cout << StringfyTime((long long)(GlobalTime));
+			GlobalParameter::OutputUnLock();
 		}
 		Pos.X = 0; Pos.Y = 1;
+		GlobalParameter::OutputLock();
 		SetConsoleCursorPosition(hOut, Pos);
 		PrintMap(0, 1, height, width);
+		GlobalParameter::OutputUnLock();
 		time = (time + 1) % (fps / 2);
 		// Then output player info
 		ShowPlayerInformation(25, 1);
@@ -339,13 +503,12 @@ void LoadMap()
 		Map.push_back(Tmp);
 	}
 	cout << endl << "Begin random generate item on map ... " << flush;
-	srand((int)time(0));
 	// Tree
 	int counter = 0;
 	while (counter < iTree)
 	{
-		int x = (int)(height * rand() / (RAND_MAX + 1));
-		int y = (int)(width * rand() / (RAND_MAX + 1));
+		int x = (int)(height * rand() / (RAND_MAX + 1.0));
+		int y = (int)(width * rand() / (RAND_MAX + 1.0));
 		if (Map[x][y].CanSpawnThing() && !Map[x][y].HavePickup())
 		{
 			Tree* tmp;
@@ -358,8 +521,8 @@ void LoadMap()
 	counter = 0;
 	while (counter < iStone)
 	{
-		int x = (int)(height * rand() / (RAND_MAX + 1));
-		int y = (int)(width * rand() / (RAND_MAX + 1));
+		int x = (int)(height * rand() / (RAND_MAX + 1.0));
+		int y = (int)(width * rand() / (RAND_MAX + 1.0));
 		if (Map[x][y].CanSpawnThing() && !Map[x][y].HavePickup())
 		{
 			Stone* tmp;
@@ -372,12 +535,12 @@ void LoadMap()
 	counter = 0;
 	while (counter < iSeed)
 	{
-		int x = (int)(height * rand() / (RAND_MAX + 1));
-		int y = (int)(width * rand() / (RAND_MAX + 1));
+		int x = (int)(height * rand() / (RAND_MAX + 1.0));
+		int y = (int)(width * rand() / (RAND_MAX + 1.0));
 		if (Map[x][y].CanSpawnThing() && !Map[x][y].HavePickup())
 		{
 			Seed* tmp;
-			tmp = new Seed(60);
+			tmp = new Seed(2*3600*24);
 			PickupList.push_back(tmp);
 			Map[x][y].AddPickup(tmp);
 			counter += 1;
@@ -386,9 +549,71 @@ void LoadMap()
 	cout << "done!\n";
 }
 
+
+
+// 游戏运行之前进行的代码
+void InitPlay()
+{
+	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	GamePlayState = 1;
+	vector<string> Menu;
+	system("cls");
+	system("mode con cols=80 lines=25");
+	PrintInformation(36,0,"冒险之地");
+	Menu.push_back("0. Begin Play          ");
+	Menu.push_back("1. Look for Instruction");
+	Menu.push_back("2. Quit                ");
+	PrintInformation(3, 7, "通过↑↓控制选择");
+	ConsoleMap GameMenu(hOut,Menu,-1);
+	bool LoopFlag = true;
+	int selectId;
+	ClearInputBuffer();
+	while (LoopFlag)
+	{
+		GameMenu.PrintOnViewPort(4, 3);
+		char p = _getch();
+		switch (p)
+		{
+		// up
+		case 72:
+			GameMenu.UpdateSelect(-1);
+			break;
+		// down
+		case 80:
+			GameMenu.UpdateSelect(1);
+			break;
+		case 13:
+			selectId = GameMenu.GetSelectedItem();
+			LoopFlag = false;
+			break;
+		default:
+			break;
+		}
+	}
+	switch (selectId)
+	{
+	case 0:
+		BeginPlay();
+		EndPlay();
+		break;
+	case 1:
+		GameInstruction(InitPlay);
+		break;
+	case 2:
+		system("cls");
+		cout << "谢谢使用！";
+		Sleep(1000);
+		system("cls");
+		break;
+	default:
+		break;
+	}
+}
+
 // 游戏初始化的一些代码，在游戏开始前执行
 void BeginPlay()
 {
+	srand((int)time(0));
 	inFile.open("D:/0_beginning/C++/game/AdvantureIsland/Debug/water.in");
 	GlobalTime = 0;
 	//设置光标为不可见
@@ -397,6 +622,8 @@ void BeginPlay()
 	GetConsoleCursorInfo(hOut, &CursorInfo);
 	CursorInfo.bVisible = false;
 	SetConsoleCursorInfo(hOut, &CursorInfo);
+
+	ClearInputBuffer();
 
 	//首先清屏
 	system("cls");
@@ -407,6 +634,18 @@ void BeginPlay()
 	Position tmp;
 
 	inFile >> tmp.X >> tmp.Y;
+
+	Constructer MyConstructer;
+
+	Cooker MyCooker;
+
+	Gardener MyGardener;
+
+	Map[0][49].AddInteractive(&MyConstructer);
+
+	Map[0][48].AddInteractive(&MyCooker);
+
+	Map[0][47].AddInteractive(&MyGardener);
 
 	//初始化Player
 	MyPlayer = new Player(100.0, EHealthState::Healthy, EHungryState::HungryAuto, tmp, height, width);
@@ -419,10 +658,11 @@ void BeginPlay()
 
 	system("cls");
 
+	//ShowInstruction(38, 1);
 	// Show the map
 	thread MapThread(_thread_refresh_map, 30);
 	thread InputThread(_thread_handle_input, 0);
-	thread TickThread(_thread_Tick, 6, 10);
+	thread TickThread(_thread_Tick, 30, 10);
 
 	while (!bGameEnd)
 	{
@@ -456,15 +696,18 @@ void EndPlay()
 
 	delete MyPlayer;
 	inFile.close();
+	system("cls");
 }
 
 void _thread_Tick(float DeltaSecond, u_int fps = 20)
 {
 	while (!bGameEnd)
 	{
+		Pause();
 		// 设置执行周期
 		thread t(_inner_Tick, DeltaSecond, fps);
 		t.detach();
+		Continue();
 		if(fps != 0)
 		{
 			Sleep(1000.0 / fps);
@@ -521,9 +764,7 @@ int test()
 
 int main()
 {
-	BeginPlay();
-
-	EndPlay();
+	GamePlayState = 0;
+	InitPlay();
 	return 0;
-
 }

@@ -24,12 +24,13 @@ private:
 	char showChar;
 	void InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spawn, char sc);
 	class PickupBase * Pickup;
+	class InteractiveBase * InteractObject;
 
 public:
 	Land(ELandType lt);
 	Land(ELandType lt, bool step, bool farm, bool spawn, char sc);
 	void ChangeType(ELandType lt);
-	bool CanStepOn() { return bCanStepOn; }
+	bool CanStepOn();
 	bool CanFarming() { return bCanFarming; }
 	bool CanSpawnThing() { return bCanSpawnThing; }
 	char getChar();
@@ -37,4 +38,7 @@ public:
 	void AddPickup(PickupBase * InPickup);
 	bool HavePickup();
 	int getColor();
+	void AddInteractive(InteractiveBase * ib);
+	InteractiveBase * getInteractiveBase() { return InteractObject; }
+	bool HaveInteractive();
 };

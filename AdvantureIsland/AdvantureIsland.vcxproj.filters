@@ -16,6 +16,15 @@
     <Filter Include="头文件\Pickup">
       <UniqueIdentifier>{a1029ddb-deb0-4311-9261-d27a72c8a455}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Interactive">
+      <UniqueIdentifier>{31741b53-830b-4279-8507-de0a6d00c840}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Pickup">
+      <UniqueIdentifier>{d3a2d551-817a-4c91-ae32-d92ca25c2bc5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Interactive">
+      <UniqueIdentifier>{b8e1d1e4-1882-4984-87a2-1ffc1d79ceeb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="land.h">
@@ -42,6 +51,21 @@
     <ClInclude Include="Seed.h">
       <Filter>头文件\Pickup</Filter>
     </ClInclude>
+    <ClInclude Include="InteractiveBase.h">
+      <Filter>头文件\Interactive</Filter>
+    </ClInclude>
+    <ClInclude Include="Constructer.h">
+      <Filter>头文件\Interactive</Filter>
+    </ClInclude>
+    <ClInclude Include="Cooker.h">
+      <Filter>头文件\Interactive</Filter>
+    </ClInclude>
+    <ClInclude Include="Gardener.h">
+      <Filter>头文件\Interactive</Filter>
+    </ClInclude>
+    <ClInclude Include="Placer.h">
+      <Filter>头文件\Interactive</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="land.cpp">
@@ -60,16 +84,31 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="PickupBase.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Tree.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Stone.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\Pickup</Filter>
     </ClCompile>
     <ClCompile Include="Seed.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\Pickup</Filter>
+    </ClCompile>
+    <ClCompile Include="Stone.cpp">
+      <Filter>源文件\Pickup</Filter>
+    </ClCompile>
+    <ClCompile Include="Tree.cpp">
+      <Filter>源文件\Pickup</Filter>
+    </ClCompile>
+    <ClCompile Include="InteractiveBase.cpp">
+      <Filter>源文件\Interactive</Filter>
+    </ClCompile>
+    <ClCompile Include="Constructer.cpp">
+      <Filter>源文件\Interactive</Filter>
+    </ClCompile>
+    <ClCompile Include="Cooker.cpp">
+      <Filter>源文件\Interactive</Filter>
+    </ClCompile>
+    <ClCompile Include="Gardener.cpp">
+      <Filter>源文件\Interactive</Filter>
+    </ClCompile>
+    <ClCompile Include="Placer.cpp">
+      <Filter>源文件\Interactive</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

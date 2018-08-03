@@ -7,10 +7,11 @@ float GlobalParameter::SickHPDecreaseRate = 5;
 float GlobalParameter::MaxHealthPoint = 100.0;
 float GlobalParameter::HealthyHPIncreaseRate = 5;
 EWeather GlobalParameter::GlobalWeather = EWeather::Sunny;
+mutex GlobalParameter::OutputMutex;
 
 void GlobalParameter::ChangeWeather()
 {
-	float rate = rand() / (RAND_MAX + 1);
+	double rate = rand() / (RAND_MAX + 1.0);
 	if (rate < 0.5)
 	{
 		GlobalWeather = EWeather::Sunny;
@@ -23,4 +24,14 @@ void GlobalParameter::ChangeWeather()
 	{
 		GlobalWeather = EWeather::Rainy;
 	}
+}
+
+void GlobalParameter::OutputLock()
+{
+	OutputMutex.lock();
+}
+
+void GlobalParameter::OutputUnLock()
+{
+	OutputMutex.unlock();
 }

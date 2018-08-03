@@ -1,7 +1,8 @@
+#include <Windows.h>
 #include "land.h"
 #include "player.h"
 #include "PickupBase.h"
-#include <Windows.h>
+#include "InteractiveBase.h"
 
 void Land::InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spawn, char sc)
 {
@@ -11,6 +12,7 @@ void Land::InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spa
 	bCanSpawnThing = spawn;
 	showChar = sc;
 	Pickup = NULL;
+	InteractObject = NULL;
 }
 
 Land::Land(ELandType lt)
@@ -76,11 +78,20 @@ void Land::ChangeType(ELandType lt)
 	}
 }
 
+bool Land::CanStepOn()
+{
+	return bCanStepOn && !HaveInteractive();
+}
+
 char Land::getChar()
 {
 	if (HavePickup())
 	{
 		return Pickup->getPickupChar();
+	}
+	if (HaveInteractive())
+	{
+		return InteractObject->GetChar();
 	}
 
 	return showChar;
@@ -128,7 +139,7 @@ int Land::getColor()
 	switch (LandType)
 	{
 	case Idle:
-		return BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY;
+		return BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY;
 		break;
 	case Farm:
 		return BACKGROUND_GREEN | BACKGROUND_INTENSITY;
@@ -148,4 +159,14 @@ int Land::getColor()
 		break;
 	}
 	return 0;
+}
+
+void Land::AddInteractive(InteractiveBase * ib)
+{
+	InteractObject = ib;
+}
+
+bool Land::HaveInteractive()
+{
+	return InteractObject != NULL;
 }
