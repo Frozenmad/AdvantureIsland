@@ -6,7 +6,7 @@ class InteractiveBase
 {
 protected:
 
-	ConsoleMap * InteractiveMap;
+	class ConsoleMap * InteractiveMap;
 	char ShowChar;
 
 public:

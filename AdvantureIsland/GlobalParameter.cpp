@@ -8,6 +8,10 @@ float GlobalParameter::MaxHealthPoint = 100.0;
 float GlobalParameter::HealthyHPIncreaseRate = 5;
 EWeather GlobalParameter::GlobalWeather = EWeather::Sunny;
 mutex GlobalParameter::OutputMutex;
+SafeSet<PlaceBase *> GlobalParameter::PlaceObjectVec;
+SafeSet<PickupBase *> GlobalParameter::PickupObjectSet;
+SafeSet<InteractiveBase *> GlobalParameter::InteractiveObjectSet;
+vector<vector<Land>> GlobalParameter::Map;
 
 void GlobalParameter::ChangeWeather()
 {

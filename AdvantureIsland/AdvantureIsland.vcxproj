@@ -115,35 +115,51 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AnimalBase.h" />
+    <ClInclude Include="Bed.h" />
+    <ClInclude Include="Chair.h" />
     <ClInclude Include="CommonStructure.h" />
     <ClInclude Include="Constructer.h" />
     <ClInclude Include="Cooker.h" />
+    <ClInclude Include="Deer.h" />
+    <ClInclude Include="FireTower.h" />
     <ClInclude Include="Gardener.h" />
     <ClInclude Include="GlobalParameter.h" />
     <ClInclude Include="InteractiveBase.h" />
     <ClInclude Include="land.h" />
     <ClInclude Include="PickupBase.h" />
+    <ClInclude Include="PlaceBase.h" />
     <ClInclude Include="Placer.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="Seed.h" />
     <ClInclude Include="Stone.h" />
+    <ClInclude Include="Trap.h" />
     <ClInclude Include="Tree.h" />
+    <ClInclude Include="Wall.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnimalBase.cpp" />
+    <ClCompile Include="Bed.cpp" />
+    <ClCompile Include="Chair.cpp" />
     <ClCompile Include="CommonStructure.cpp" />
     <ClCompile Include="Constructer.cpp" />
     <ClCompile Include="Cooker.cpp" />
+    <ClCompile Include="Deer.cpp" />
+    <ClCompile Include="FireTower.cpp" />
     <ClCompile Include="Gardener.cpp" />
     <ClCompile Include="GlobalParameter.cpp" />
     <ClCompile Include="InteractiveBase.cpp" />
     <ClCompile Include="land.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PickupBase.cpp" />
+    <ClCompile Include="PlaceBase.cpp" />
     <ClCompile Include="Placer.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="Seed.cpp" />
     <ClCompile Include="Stone.cpp" />
+    <ClCompile Include="Trap.cpp" />
     <ClCompile Include="Tree.cpp" />
+    <ClCompile Include="Wall.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

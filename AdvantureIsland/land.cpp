@@ -3,6 +3,7 @@
 #include "player.h"
 #include "PickupBase.h"
 #include "InteractiveBase.h"
+#include "PlaceBase.h"
 
 void Land::InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spawn, char sc)
 {
@@ -13,6 +14,7 @@ void Land::InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spa
 	showChar = sc;
 	Pickup = NULL;
 	InteractObject = NULL;
+	PlaceObject = NULL;
 }
 
 Land::Land(ELandType lt)
@@ -80,7 +82,7 @@ void Land::ChangeType(ELandType lt)
 
 bool Land::CanStepOn()
 {
-	return bCanStepOn && !HaveInteractive();
+	return bCanStepOn && !HaveInteractive() && !HavePlaceBase();
 }
 
 char Land::getChar()
@@ -88,6 +90,10 @@ char Land::getChar()
 	if (HavePickup())
 	{
 		return Pickup->getPickupChar();
+	}
+	if (HavePlaceBase())
+	{
+		return PlaceObject->GetChar();
 	}
 	if (HaveInteractive())
 	{
@@ -102,6 +108,7 @@ void Land::onStepOnLand(Player * player)
 	if (HavePickup())
 	{
 		Pickup->onCollect(player);
+		GlobalParameter::PickupObjectSet.RemoveElement(Pickup);
 		Pickup = NULL;
 	}
 	switch (LandType)
@@ -164,6 +171,26 @@ int Land::getColor()
 void Land::AddInteractive(InteractiveBase * ib)
 {
 	InteractObject = ib;
+}
+
+void Land::AddPlaceObject(PlaceBase * pb)
+{
+	PlaceObject = pb;
+}
+
+void Land::PickupPlaceBase(Player * player)
+{
+	if (HavePlaceBase())
+	{
+		PlaceObject->PlayerPickUp(player);
+		GlobalParameter::PlaceObjectVec.RemoveElement(PlaceObject);
+		PlaceObject = NULL;
+	}
+}
+
+bool Land::HavePlaceBase()
+{
+	return PlaceObject != NULL;
 }
 
 bool Land::HaveInteractive()

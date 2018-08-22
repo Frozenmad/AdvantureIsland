@@ -25,6 +25,7 @@ private:
 	void InnerHelper_SetParameter(ELandType lt, bool step, bool farm, bool spawn, char sc);
 	class PickupBase * Pickup;
 	class InteractiveBase * InteractObject;
+	class PlaceBase * PlaceObject;
 
 public:
 	Land(ELandType lt);
@@ -39,6 +40,10 @@ public:
 	bool HavePickup();
 	int getColor();
 	void AddInteractive(InteractiveBase * ib);
+	void AddPlaceObject(PlaceBase * pb);
 	InteractiveBase * getInteractiveBase() { return InteractObject; }
+	PlaceBase * getPlaceBase() { return PlaceObject; }
+	void PickupPlaceBase(Player * player);
+	bool HavePlaceBase();
 	bool HaveInteractive();
 };

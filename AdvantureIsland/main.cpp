@@ -20,12 +20,10 @@ using namespace std;
 
 // 一些全局变量
 ifstream inFile;
-vector<vector<Land>> Map;
 Player * MyPlayer;
 int height, width;
 bool bGameEnd;
 int iTree, iStone, iSeed, iAnimal;
-vector<PickupBase*> PickupList;
 
 mutex GameThreadMutex;
 Placer MyPlacer;
@@ -120,19 +118,19 @@ void PrintMap(int initX, int initY, int height, int width, int SideHeight = 5, i
 			}
 			else if (i == 0 && j == 0)
 			{
-				SetConsoleTextAttribute(hOut, Map[x][y].getColor());
+				SetConsoleTextAttribute(hOut, GlobalParameter::Map[x][y].getColor());
 				cout << "<>";
 			}
 			else
 			{
-				if (Map[x][y].HavePickup() || Map[x][y].HaveInteractive())
+				if (GlobalParameter::Map[x][y].HavePickup() || GlobalParameter::Map[x][y].HaveInteractive() || GlobalParameter::Map[x][y].HavePlaceBase())
 				{
-					SetConsoleTextAttribute(hOut, Map[x][y].getColor());
-					cout << Map[x][y].getChar() << " ";
+					SetConsoleTextAttribute(hOut, GlobalParameter::Map[x][y].getColor());
+					cout << GlobalParameter::Map[x][y].getChar() << " ";
 				}
 				else
 				{
-					SetConsoleTextAttribute(hOut, Map[x][y].getColor());
+					SetConsoleTextAttribute(hOut, GlobalParameter::Map[x][y].getColor());
 					cout << "  ";
 				}
 			}
@@ -161,7 +159,7 @@ string getShowWindow(int SideHeight, int SideWidth, int height, int width)
 			}
 			else
 			{
-				Show += Map[x][y].getChar();
+				Show += GlobalParameter::Map[x][y].getChar();
 			}
 			Show += ' ';
 		}
@@ -199,16 +197,16 @@ void _thread_handle_input(u_int fps = 20)
 			switch (h)
 			{
 				case 'w':
-					HandleMapInput(Map, MyPlayer, Position(-1, 0));
+					HandleMapInput(GlobalParameter::Map, MyPlayer, Position(-1, 0));
 					break;
 				case 's':
-					HandleMapInput(Map, MyPlayer, Position(1, 0));
+					HandleMapInput(GlobalParameter::Map, MyPlayer, Position(1, 0));
 					break;
 				case 'a':
-					HandleMapInput(Map, MyPlayer, Position(0, -1));
+					HandleMapInput(GlobalParameter::Map, MyPlayer, Position(0, -1));
 					break;
 				case 'd':
-					HandleMapInput(Map, MyPlayer, Position(0, 1));
+					HandleMapInput(GlobalParameter::Map, MyPlayer, Position(0, 1));
 					break;
 				case 'q':
 					bGameEnd = true;
@@ -218,12 +216,12 @@ void _thread_handle_input(u_int fps = 20)
 					int x, y;
 					x = MyPlayer->GetPlayerPosition().X; y = MyPlayer->GetPlayerPosition().Y;
 					// check up:
-					if (validMapId(x - 1, y) || Map[x-1][y].HaveInteractive())
+					if (validMapId(x - 1, y) || GlobalParameter::Map[x-1][y].HaveInteractive())
 					{
 						COORD Pos;
 						Pos.X = 0; Pos.Y = 13;
 						Pause();
-						Map[x - 1][y].getInteractiveBase()->ProcessQuery(MyPlayer,Pos);
+						GlobalParameter::Map[x - 1][y].getInteractiveBase()->ProcessQuery(MyPlayer,Pos);
 						Continue();
 					}
 					break;
@@ -233,85 +231,10 @@ void _thread_handle_input(u_int fps = 20)
 					COORD Pos;
 					Pos.X = 0; Pos.Y = 13;
 					Pause();
-					MyPlacer.Place(Map, MyPlayer, Pos);
+					MyPlacer.Place(GlobalParameter::Map, MyPlayer, Pos);
 					Continue();
 					break;
 				}
-				/*
-				case '1':
-					if (Inv->Vegetable >= 3 && Inv->Wood >= 1)
-					{
-						Inv->Vegetable -= 3;
-						Inv->Wood -= 1;
-						Inv->Food += 1;
-					}
-					break;
-				case '2':
-					if (Inv->Vegetable >= 1 && Inv->Wood >= 1 && Inv->Meat >= 1)
-					{
-						Inv->Vegetable -= 1;
-						Inv->Wood -= 1;
-						Inv->Meat -= 1;
-						Inv->Food += 1;
-					}
-					break;
-				case '3':
-					if (Inv->Meat >= 2 && Inv->Wood >= 1)
-					{
-						Inv->Meat -= 2;
-						Inv->Wood -= 1;
-						Inv->Food += 1;
-					}
-					break;
-				case '4':
-					if (Inv->Wood >= 10)
-					{
-						Inv->Wood -= 10;
-						Inv->Bed += 1;
-					}
-					break;
-				case '5':
-					if (Inv->Wood >= 4)
-					{
-						Inv->Wood -= 4;
-						Inv->Chair += 1;
-					}
-					break;
-				case '6':
-					if (Inv->Stone >= 3)
-					{
-						Inv->Stone -= 3;
-						Inv->Wall += 1;
-					}
-					break;
-				case '7':
-					if (Inv->Stone >= 2)
-					{
-						Inv->Stone -= 2;
-						Inv->FireTower += 1;
-					}
-					break;
-				case '8':
-					if (Inv->Stone >= 4 && Inv->Wood >= 2)
-					{
-						Inv->Stone -= 4;
-						Inv->Wood -= 2;
-						Inv->Cook += 1;
-					}
-				case '9':
-					if (Inv->Vegetable >= 1)
-					{
-						Inv->Vegetable -= 1;
-						Inv->Medicine += 1;
-					}
-					break;
-				case '0':
-					if (Inv->Vegetable >= 1)
-					{
-						Inv->Vegetable -= 1;
-						Inv->Seed += 2;
-					}
-					break;*/
 				default:
 					break;
 			}
@@ -500,7 +423,7 @@ void LoadMap()
 				break;
 			}
 		}
-		Map.push_back(Tmp);
+		GlobalParameter::Map.push_back(Tmp);
 	}
 	cout << endl << "Begin random generate item on map ... " << flush;
 	// Tree
@@ -509,12 +432,12 @@ void LoadMap()
 	{
 		int x = (int)(height * rand() / (RAND_MAX + 1.0));
 		int y = (int)(width * rand() / (RAND_MAX + 1.0));
-		if (Map[x][y].CanSpawnThing() && !Map[x][y].HavePickup())
+		if (GlobalParameter::Map[x][y].CanSpawnThing() && !GlobalParameter::Map[x][y].HavePickup())
 		{
 			Tree* tmp;
 			tmp = new Tree();
-			PickupList.push_back(tmp);
-			Map[x][y].AddPickup(tmp);
+			GlobalParameter::PickupObjectSet.AddElement(tmp);
+			GlobalParameter::Map[x][y].AddPickup(tmp);
 			counter += 1;
 		}
 	}
@@ -523,12 +446,12 @@ void LoadMap()
 	{
 		int x = (int)(height * rand() / (RAND_MAX + 1.0));
 		int y = (int)(width * rand() / (RAND_MAX + 1.0));
-		if (Map[x][y].CanSpawnThing() && !Map[x][y].HavePickup())
+		if (GlobalParameter::Map[x][y].CanSpawnThing() && !GlobalParameter::Map[x][y].HavePickup())
 		{
 			Stone* tmp;
 			tmp = new Stone();
-			PickupList.push_back(tmp);
-			Map[x][y].AddPickup(tmp);
+			GlobalParameter::PickupObjectSet.AddElement(tmp);
+			GlobalParameter::Map[x][y].AddPickup(tmp);
 			counter += 1;
 		}
 	}
@@ -537,12 +460,12 @@ void LoadMap()
 	{
 		int x = (int)(height * rand() / (RAND_MAX + 1.0));
 		int y = (int)(width * rand() / (RAND_MAX + 1.0));
-		if (Map[x][y].CanSpawnThing() && !Map[x][y].HavePickup())
+		if (GlobalParameter::Map[x][y].CanSpawnThing() && !GlobalParameter::Map[x][y].HavePickup())
 		{
 			Seed* tmp;
 			tmp = new Seed(2*3600*24);
-			PickupList.push_back(tmp);
-			Map[x][y].AddPickup(tmp);
+			GlobalParameter::PickupObjectSet.AddElement(tmp);
+			GlobalParameter::Map[x][y].AddPickup(tmp);
 			counter += 1;
 		}
 	}
@@ -635,17 +558,21 @@ void BeginPlay()
 
 	inFile >> tmp.X >> tmp.Y;
 
-	Constructer MyConstructer;
+	Constructer* MyConstructer = new Constructer;
 
-	Cooker MyCooker;
+	Cooker* MyCooker = new Cooker;
 
-	Gardener MyGardener;
+	Gardener* MyGardener = new Gardener;
 
-	Map[0][49].AddInteractive(&MyConstructer);
+	GlobalParameter::InteractiveObjectSet.AddElement(MyConstructer);
+	GlobalParameter::InteractiveObjectSet.AddElement(MyCooker);
+	GlobalParameter::InteractiveObjectSet.AddElement(MyGardener);
 
-	Map[0][48].AddInteractive(&MyCooker);
+	GlobalParameter::Map[0][49].AddInteractive(MyConstructer);
 
-	Map[0][47].AddInteractive(&MyGardener);
+	GlobalParameter::Map[0][48].AddInteractive(MyCooker);
+
+	GlobalParameter::Map[0][47].AddInteractive(MyGardener);
 
 	//初始化Player
 	MyPlayer = new Player(100.0, EHealthState::Healthy, EHungryState::HungryAuto, tmp, height, width);
@@ -689,11 +616,6 @@ void EndPlay()
 		cout << "You Die!" << endl;
 	}
 
-	for (auto pointer : PickupList)
-	{
-		delete pointer;
-	}
-
 	delete MyPlayer;
 	inFile.close();
 	system("cls");
@@ -730,13 +652,25 @@ void _inner_Tick(float DeltaSecond, u_int fps)
 
 	MyPlayer->Tick(DeltaSecond);
 
-	for (PickupBase * pointer : PickupList)
+	GlobalParameter::PickupObjectSet.lockSet();
+	for (PickupBase * pointer : GlobalParameter::PickupObjectSet.inner)
 	{
 		if (pointer->WhetherTick())
 		{
 			pointer->Tick(DeltaSecond);
 		}
 	}
+	GlobalParameter::PickupObjectSet.unlockSet();
+
+	GlobalParameter::PlaceObjectVec.lockSet();
+	for (PlaceBase * placeObj : GlobalParameter::PlaceObjectVec.inner)
+	{
+		if (placeObj->GetCanTick())
+		{
+			placeObj->Tick(DeltaSecond);
+		}
+	}
+	GlobalParameter::PlaceObjectVec.unlockSet();
 }
 
 int test()
